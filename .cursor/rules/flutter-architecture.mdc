@@ -1,0 +1,55 @@
+---
+description: Feature-based architecture and layering for Apivo Dart code
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Flutter architecture
+
+## Layer responsibilities
+
+| Layer | Location | Rules |
+|-------|----------|-------|
+| Domain | `domain/` | Pure Dart models, enums, value types. No Flutter imports. |
+| Data | `data/` | HTTP, DB, mappers. Converts between domain and external APIs. |
+| Presentation | `presentation/` | Screens, `Notifier` controllers, widgets. |
+
+## State management
+
+```dart
+// Controller pattern used in this project
+final myControllerProvider =
+    NotifierProvider<MyController, MyState>(MyController.new);
+
+class MyController extends Notifier<MyState> {
+  @override
+  MyState build() => MyState.initial();
+
+  void updateSomething(String value) {
+    state = state.copyWith(something: value);
+  }
+}
+```
+
+- Screens: `ConsumerWidget` or `ConsumerStatefulWidget`, `ref.watch` for state, `ref.read` for actions.
+- Keep widgets stateless when state lives in a controller.
+
+## Imports
+
+```dart
+// ✅ Feature widget importing its own domain
+import '../../domain/http_method_type.dart';
+
+// ✅ Shared widget from shared/
+import '../../../shared/widgets/app_button.dart';
+
+// ❌ Feature A importing Feature B's presentation
+import '../../other_feature/presentation/other_screen.dart';
+```
+
+## File naming
+
+- Screens: `*_screen.dart`
+- Controllers: `*_controller.dart`, state: `*_state.dart`
+- Widgets: descriptive names (`request_url_bar.dart`)
+- Domain enums: `*_type.dart` or standalone noun (`auth_type.dart`)

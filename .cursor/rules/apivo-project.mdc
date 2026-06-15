@@ -1,0 +1,31 @@
+---
+description: Apivo project context and global conventions
+alwaysApply: true
+---
+
+# Apivo
+
+Cross-platform Flutter API client. See `AGENTS.md` for full architecture.
+
+## Stack
+
+Flutter + Riverpod + go_router + Dio + Drift. Dart SDK ^3.12.
+
+## Structure
+
+- `lib/features/<feature>/` — domain, data, presentation (feature-first)
+- `lib/core/` — theme, router, network, logging, utils
+- `lib/shared/` — reusable widgets and layout only
+- `lib/database/tables/` — Drift schemas
+
+## Non-negotiables
+
+- No cross-feature imports; share via `core/` or `shared/`.
+- User-facing strings → `AppStrings` in `core/constants/app_strings.dart`.
+- Styling → design tokens (`AppSpacing`, `AppColors`, theme), not literals.
+- State → Riverpod `Notifier` + immutable state with `copyWith`.
+- Routes → `RoutePaths` / `RouteNames`; register in `app_router.dart`.
+
+## Scope discipline
+
+Match existing patterns. Minimal diffs. Reuse `AppButton`, `AppCard`, `AppTextField`, etc.

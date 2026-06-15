@@ -3,24 +3,21 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/tokens/app_spacing.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../history/domain/request_history_model.dart';
+import '../../../request_builder/domain/http_method_type.dart';
 
 class RecentRequestCard extends StatelessWidget {
   const RecentRequestCard({
     super.key,
-    required this.method,
-    required this.url,
-    required this.timeAgo,
-    required this.statusCode,
+    required this.history,
     this.onTap,
   });
 
-  final String method;
-  final String url;
-  final String timeAgo;
-  final int statusCode;
+  final RequestHistoryModel history;
   final VoidCallback? onTap;
 
-  AppBadgeVariant _statusVariant(int code) {
+  AppBadgeVariant _statusVariant(int? code) {
+    if (code == null) return AppBadgeVariant.error;
     if (code >= 200 && code < 300) return AppBadgeVariant.success;
     if (code >= 400 && code < 500) return AppBadgeVariant.warning;
     if (code >= 500) return AppBadgeVariant.error;
@@ -36,31 +33,40 @@ class RecentRequestCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          AppBadge(label: method, variant: AppBadgeVariant.info),
+          AppBadge(
+            label: history.method.label,
+            variant: AppBadgeVariant.info,
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  url,
+                  history.displayUrl,
                   style: theme.textTheme.bodyMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  timeAgo,
+                  history.formattedSentAt,
                   style: theme.textTheme.bodySmall,
                 ),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          AppBadge(
-            label: '$statusCode',
-            variant: _statusVariant(statusCode),
-          ),
+          if (history.statusCode != null)
+            AppBadge(
+              label: '${history.statusCode}',
+              variant: _statusVariant(history.statusCode),
+            )
+          else
+            AppBadge(
+              label: 'ERR',
+              variant: AppBadgeVariant.error,
+            ),
         ],
       ),
     );

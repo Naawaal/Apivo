@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/collections/presentation/collection_detail_screen.dart';
 import '../../features/collections/presentation/collections_screen.dart';
+import '../../features/environments/presentation/environment_detail_screen.dart';
 import '../../features/environments/presentation/environments_screen.dart';
 import '../../features/history/presentation/history_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -50,6 +52,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.collections,
                 name: RouteNames.collections,
                 builder: (context, state) => const CollectionsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':collectionId',
+                    name: RouteNames.collectionDetail,
+                    builder: (context, state) {
+                      final collectionId =
+                          state.pathParameters['collectionId']!;
+                      return CollectionDetailScreen(collectionId: collectionId);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -70,6 +83,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.environments,
                 name: RouteNames.environments,
                 builder: (context, state) => const EnvironmentsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':environmentId',
+                    name: RouteNames.environmentDetail,
+                    builder: (context, state) {
+                      final environmentId =
+                          state.pathParameters['environmentId']!;
+                      return EnvironmentDetailScreen(
+                        environmentId: environmentId,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -89,7 +115,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.request,
         name: RouteNames.request,
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const RequestBuilderScreen(),
+        builder: (context, state) {
+          final historyId = state.extra as String?;
+          return RequestBuilderScreen(historyId: historyId);
+        },
+      ),
+      GoRoute(
+        path: RoutePaths.requestWithId,
+        name: RouteNames.requestWithId,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final requestId = state.pathParameters['requestId'];
+          return RequestBuilderScreen(requestId: requestId);
+        },
       ),
     ],
   );

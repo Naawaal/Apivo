@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -7,8 +8,12 @@ import '../../../core/design/tokens/app_spacing.dart';
 import '../../../core/router/route_paths.dart';
 import '../../../shared/layout/adaptive_page.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_empty_state.dart';
+import '../../../shared/widgets/app_loading.dart';
 import '../../../shared/widgets/app_section_header.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../collections/presentation/collections_providers.dart';
+import '../../history/presentation/history_providers.dart';
 import 'widgets/collection_card.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/recent_request_card.dart';
@@ -54,23 +59,18 @@ const _quickActions = [
   ),
 ];
 
-const _recentRequests = [
-  ('GET', 'https://api.example.com/users', '2m ago', 200),
-  ('POST', 'https://api.example.com/auth/login', '15m ago', 201),
-  ('GET', 'https://api.example.com/products', '1h ago', 404),
-];
-
-const _collections = [
-  ('User API', 12),
-  ('Payment Service', 8),
-];
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  void _openHistoryItem(BuildContext context, String id) {
+    context.push(RoutePaths.request, extra: id);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final recentAsync = ref.watch(recentHistoryProvider);
+    final collectionsAsync = ref.watch(collectionsProvider);
 
     return AdaptivePage(
       child: Column(
@@ -120,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: AppSpacing.cardGap,
                   crossAxisSpacing: AppSpacing.cardGap,
-                  childAspectRatio: 2.2,
+                  childAspectRatio: 2.0,
                   children: _quickActions
                       .map(
                         (action) => QuickActionCard(
@@ -140,7 +140,7 @@ class HomeScreen extends StatelessWidget {
                 );
               }
               return SizedBox(
-                height: 130,
+                height: 140,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _quickActions.length,
@@ -176,17 +176,39 @@ class HomeScreen extends StatelessWidget {
               child: const Text(AppStrings.homeSeeAll),
             ),
           ),
-          ..._recentRequests.map(
-            (r) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.cardGap),
-              child: RecentRequestCard(
-                method: r.$1,
-                url: r.$2,
-                timeAgo: r.$3,
-                statusCode: r.$4,
-                onTap: () => context.push(RoutePaths.request),
-              ),
+          recentAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: AppLoading(),
             ),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (recent) {
+              if (recent.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.cardGap),
+                  child: AppEmptyState(
+                    icon: Icons.history_rounded,
+                    title: AppStrings.historyEmpty,
+                    message: AppStrings.historyEmptyMessage,
+                  ),
+                );
+              }
+              return Column(
+                children: recent
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.cardGap,
+                        ),
+                        child: RecentRequestCard(
+                          history: item,
+                          onTap: () => _openHistoryItem(context, item.id),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.sectionGap),
           AppSectionHeader(
@@ -196,15 +218,43 @@ class HomeScreen extends StatelessWidget {
               child: const Text(AppStrings.homeSeeAll),
             ),
           ),
-          ..._collections.map(
-            (c) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.cardGap),
-              child: CollectionCard(
-                name: c.$1,
-                requestCount: c.$2,
-                onTap: () => context.go(RoutePaths.collections),
-              ),
+          collectionsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: AppLoading(),
             ),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (collections) {
+              final preview = collections.take(3).toList();
+              if (preview.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.cardGap),
+                  child: AppEmptyState(
+                    icon: Icons.folder_open_rounded,
+                    title: AppStrings.collectionsEmpty,
+                    message: AppStrings.collectionsEmptyMessage,
+                  ),
+                );
+              }
+              return Column(
+                children: preview
+                    .map(
+                      (collection) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.cardGap,
+                        ),
+                        child: CollectionCard(
+                          name: collection.name,
+                          requestCount: collection.requestCount,
+                          onTap: () => context.push(
+                            RoutePaths.collectionById(collection.id),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
           ),
         ],
       ),

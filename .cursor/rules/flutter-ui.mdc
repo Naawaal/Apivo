@@ -1,0 +1,62 @@
+---
+description: UI, theming, and responsive layout conventions
+globs: lib/**/presentation/**,lib/shared/**
+alwaysApply: false
+---
+
+# UI conventions
+
+## Design system
+
+- Spacing: `AppSpacing` (e.g. `AppSpacing.md`, `AppSpacing.gapSm`)
+- Sizes: `AppSizes` for icons, button heights, nav rail width
+- Colors in widgets: prefer `context.colorScheme` and `Theme.of(context)`
+- Typography: `context.textTheme`, not raw `TextStyle` with hardcoded sizes
+
+## Shared components
+
+Use before creating new ones:
+
+- `AppButton`, `AppIconButton`, `AppTextField`, `AppCard`
+- `AppChip`, `AppBadge`, `AppDivider`, `AppSectionHeader`
+- `AppEmptyState`, `AppErrorState`, `AppLoading`
+- `AdaptivePage`, `PageContainer`, `ResponsivePadding`
+
+## Responsive layout
+
+```dart
+if (context.isExpanded) {
+  return _wideLayout();
+}
+return _compactLayout();
+```
+
+Breakpoints via `AppBreakpoints` / `context.isCompact`, `isMedium`, `isExpanded`.
+
+## Strings and accessibility
+
+- All visible labels → `AppStrings`
+- Use `Semantics` or meaningful `tooltip` on icon-only controls when adding new UI
+
+## Example widget structure
+
+```dart
+class MyPanel extends StatelessWidget {
+  const MyPanel({super.key, required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppSectionHeader(title: title),
+          // ...
+        ],
+      ),
+    );
+  }
+}
+```

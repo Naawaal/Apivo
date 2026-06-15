@@ -1,0 +1,43 @@
+---
+description: Dart coding standards for Apivo
+globs: "**/*.dart"
+alwaysApply: false
+---
+
+# Dart standards
+
+## Style
+
+- Follow `analysis_options.yaml` (flutter_lints).
+- Prefer `const` constructors and widgets where possible.
+- Use `final` for locals and fields; immutable state classes.
+- `abstract final class` for static-only holders (`AppStrings`, `AppColors`).
+
+## Types and null safety
+
+- Avoid `dynamic`; use explicit types on public APIs.
+- Use named parameters for widgets with more than two arguments.
+- Enum extensions for display labels live next to the enum in `domain/`.
+
+## Logging
+
+```dart
+AppLogger.info('Request sent', tag: 'RequestRunner');
+AppLogger.error('Failed to parse response', tag: 'RequestMapper', error: e);
+```
+
+Do not use `print()` in production code.
+
+## Error handling
+
+- Network layer: throw or return `NetworkResult` / `NetworkException`.
+- UI: show `AppErrorState` or inline validation via controller state.
+- Validate URLs and JSON in `core/utils/validators.dart` and `json_formatter.dart`.
+
+## Code generation
+
+After Drift schema changes:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
